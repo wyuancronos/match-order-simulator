@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Orders Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Match Orders Simulator</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Simulates the _matchOrders function
+        </p>
+        
+        <!-- Taker Order Section -->
+        <div class="order-section taker-order">
+            <div class="order-header">
+                Taker Order
+            </div>
+            <div class="order-inputs">
+                <div class="input-group">
+                    <label>Side & Token</label>
+                    <select id="takerSideToken" onchange="updateTakerLabels(); updateMakerOrderOptions(); updateCalculations();">
+                        <option value="BUY YES">BUY YES</option>
+                        <option value="SELL YES">SELL YES</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label id="takerMakerAmountLabel">Maker Amount (Collateral to Pay)</label>
+                    <input type="number" id="takerMakerAmount" placeholder="e.g. 212000000">
+                </div>
+                <div class="input-group">
+                    <label id="takerTakerAmountLabel">Taker Amount (YES Tokens to Receive)</label>
+                    <input type="number" id="takerTakerAmount" placeholder="e.g. 371929800">
+                </div>
+                <div class="input-group">
+                    <label>Making (Fill Amount)</label>
+                    <input type="number" id="takerMaking" placeholder="≤ Maker Amount">
+                </div>
+            </div>
+            <div class="order-results" id="takerResults"></div>
+            <div id="takerErrors"></div>
+        </div>
+        
+        <!-- Maker Orders Section -->
+        <div id="makerOrdersContainer"></div>
+        
+        <button class="add-maker-btn" onclick="addMakerOrder()">+ Add Maker Order</button>
+        
+        <button class="add-maker-btn" onclick="exportOrders()" style="background: #4CAF50; margin-left: 10px;">
+            Export Orders
+        </button>
+        
+        <button class="add-maker-btn" onclick="importOrders()" style="background: #FF9800; margin-left: 10px;">
+            Import Orders
+        </button>
+        
+        <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="handleFileImport(event)">
+        
+        <!-- Final Summary -->
+        <div class="final-summary">
+            <div class="summary-title">Final Exchange State & Validation</div>
+            <div id="finalSummary"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
