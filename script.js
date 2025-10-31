@@ -930,9 +930,9 @@ function validateAndLoadOrders(data) {
         return;
     }
 
-    // Validate taker order fields
+    // Validate taker order fields ('making' is optional)
     const taker = data.takerOrder;
-    const requiredTakerFields = ['side', 'makerAmount', 'takerAmount', 'making'];
+    const requiredTakerFields = ['side', 'makerAmount', 'takerAmount'];
     const missingTakerFields = requiredTakerFields.filter(field =>
         taker[field] === undefined && !(field === 'side' && taker.side !== undefined)
     );
@@ -947,10 +947,10 @@ function validateAndLoadOrders(data) {
         return;
     }
 
-    // Validate each maker order
+    // Validate each maker order ('making' is optional)
     for (let i = 0; i < data.makerOrders.length; i++) {
         const maker = data.makerOrders[i];
-        const requiredMakerFields = ['side', 'makerAmount', 'takerAmount', 'making'];
+        const requiredMakerFields = ['side', 'makerAmount', 'takerAmount'];
         const missingMakerFields = requiredMakerFields.filter(field =>
             maker[field] === undefined
         );
@@ -1013,7 +1013,7 @@ function loadOrdersFromData(data) {
         document.getElementById('takerSideToken').value = takerSideToken;
         document.getElementById('takerMakerAmount').value = taker.makerAmount;
         document.getElementById('takerTakerAmount').value = taker.takerAmount;
-        document.getElementById('takerMaking').value = taker.making;
+        document.getElementById('takerMaking').value = taker.making || '';
 
         // Update taker labels and maker options
         updateTakerLabels();
@@ -1036,7 +1036,7 @@ function loadOrdersFromData(data) {
             document.getElementById(`makerSideToken-${currentId}`).value = makerSideToken;
             document.getElementById(`makerMakerAmount-${currentId}`).value = maker.makerAmount;
             document.getElementById(`makerTakerAmount-${currentId}`).value = maker.takerAmount;
-            document.getElementById(`makerMaking-${currentId}`).value = maker.making;
+            document.getElementById(`makerMaking-${currentId}`).value = maker.making || '';
         });
 
         // Update calculations to show results
