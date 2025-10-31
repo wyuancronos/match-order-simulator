@@ -57,7 +57,46 @@
         </button>
         
         <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="handleFileImport(event)">
-        
+
+        <!-- Import Modal -->
+        <div id="importModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Import Orders</h2>
+                    <span class="close-btn" onclick="closeImportModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="import-options">
+                        <button class="option-btn" onclick="selectImportOption('paste')">
+                            <span class="option-icon">📋</span>
+                            <span>Paste JSON</span>
+                        </button>
+                        <button class="option-btn" onclick="selectImportOption('file')">
+                            <span class="option-icon">📁</span>
+                            <span>Load from File</span>
+                        </button>
+                    </div>
+
+                    <div id="pasteSection" class="import-section" style="display: none;">
+                        <label for="jsonTextArea">Paste your JSON here:</label>
+                        <textarea id="jsonTextArea" placeholder='{"takerOrder": {...}, "makerOrders": [...]}'></textarea>
+                        <div class="button-group">
+                            <button class="action-btn primary-btn" onclick="importFromText()">Import</button>
+                            <button class="action-btn secondary-btn" onclick="closeImportModal()">Cancel</button>
+                        </div>
+                    </div>
+
+                    <div id="fileSection" class="import-section" style="display: none;">
+                        <p>Select a JSON file from your computer:</p>
+                        <input type="file" id="modalFileInput" accept=".json" onchange="handleModalFileImport(event)">
+                        <div class="button-group">
+                            <button class="action-btn secondary-btn" onclick="closeImportModal()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Final Summary -->
         <div class="final-summary">
             <div class="summary-title">Final Exchange State & Validation</div>

@@ -230,6 +230,14 @@ document.addEventListener('DOMContentLoaded', function() {
     updateTakerLabels();
     updateMakerOrderOptions();
     updateCalculations();
+
+    // Close modal when clicking outside of it
+    const modal = document.getElementById('importModal');
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            closeImportModal();
+        }
+    };
 });
 
 function addMakerOrder() {
@@ -836,10 +844,124 @@ function exportOrders() {
 
 // Import orders from JSON file
 function importOrders() {
-    const fileInput = document.getElementById('importFileInput');
-    fileInput.click();
+    // Open the modal instead of directly clicking file input
+    const modal = document.getElementById('importModal');
+    modal.style.display = 'block';
+
+    // Reset the modal state
+    document.getElementById('pasteSection').style.display = 'none';
+    document.getElementById('fileSection').style.display = 'none';
+    document.getElementById('jsonTextArea').value = '';
 }
 
+function closeImportModal() {
+    const modal = document.getElementById('importModal');
+    modal.style.display = 'none';
+
+    // Reset file input
+    document.getElementById('modalFileInput').value = '';
+}
+
+function selectImportOption(option) {
+    const pasteSection = document.getElementById('pasteSection');
+    const fileSection = document.getElementById('fileSection');
+
+    if (option === 'paste') {
+        pasteSection.style.display = 'block';
+        fileSection.style.display = 'none';
+    } else if (option === 'file') {
+        pasteSection.style.display = 'none';
+        fileSection.style.display = 'block';
+    }
+}
+
+function importFromText() {
+    const jsonText = document.getElementById('jsonTextArea').value.trim();
+
+    if (!jsonText) {
+        alert('Please paste JSON data first.');
+        return;
+    }
+
+    try {
+        const importData = JSON.parse(jsonText);
+        validateAndLoadOrders(importData);
+        closeImportModal();
+    } catch (error) {
+        alert('Error parsing JSON: ' + error.message + '\n\nPlease check your JSON format.');
+    }
+}
+
+function handleModalFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importData = JSON.parse(e.target.result);
+            validateAndLoadOrders(importData);
+            closeImportModal();
+        } catch (error) {
+            alert('Error parsing JSON file: ' + error.message + '\n\nPlease check your JSON format.');
+        }
+    };
+    reader.readAsText(file);
+}
+
+function validateAndLoadOrders(data) {
+    // Validate JSON structure
+    if (!data.takerOrder) {
+        alert('Invalid JSON format: Missing "takerOrder" field.\n\nExpected structure:\n{\n  "takerOrder": {...},\n  "makerOrders": [...]\n}');
+        return;
+    }
+
+    if (!data.makerOrders || !Array.isArray(data.makerOrders)) {
+        alert('Invalid JSON format: Missing or invalid "makerOrders" field.\n\nExpected structure:\n{\n  "takerOrder": {...},\n  "makerOrders": [...]\n}');
+        return;
+    }
+
+    // Validate taker order fields
+    const taker = data.takerOrder;
+    const requiredTakerFields = ['side', 'makerAmount', 'takerAmount', 'making'];
+    const missingTakerFields = requiredTakerFields.filter(field =>
+        taker[field] === undefined && !(field === 'side' && taker.side !== undefined)
+    );
+
+    // Allow either 'token' or 'tokenId' for taker
+    if (!taker.token && taker.tokenId === undefined) {
+        missingTakerFields.push('token or tokenId');
+    }
+
+    if (missingTakerFields.length > 0) {
+        alert('Invalid takerOrder: Missing required fields: ' + missingTakerFields.join(', '));
+        return;
+    }
+
+    // Validate each maker order
+    for (let i = 0; i < data.makerOrders.length; i++) {
+        const maker = data.makerOrders[i];
+        const requiredMakerFields = ['side', 'makerAmount', 'takerAmount', 'making'];
+        const missingMakerFields = requiredMakerFields.filter(field =>
+            maker[field] === undefined
+        );
+
+        // Allow either 'token' or 'tokenId' for maker
+        if (!maker.token && maker.tokenId === undefined) {
+            missingMakerFields.push('token or tokenId');
+        }
+
+        if (missingMakerFields.length > 0) {
+            alert(`Invalid makerOrder at index ${i}: Missing required fields: ${missingMakerFields.join(', ')}`);
+            return;
+        }
+    }
+
+    // If validation passes, load the orders
+    loadOrdersFromData(data);
+}
+
+// Keep the old file input handler for backward compatibility
 function handleFileImport(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -848,7 +970,7 @@ function handleFileImport(event) {
     reader.onload = function(e) {
         try {
             const importData = JSON.parse(e.target.result);
-            loadOrdersFromData(importData);
+            validateAndLoadOrders(importData);
         } catch (error) {
             alert('Error parsing JSON file: ' + error.message);
         }
