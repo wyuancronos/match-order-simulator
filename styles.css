@@ -436,3 +436,59 @@ h1 {
 .secondary-btn:hover {
     background: #d0d0d0;
 }
+
+/* Clipboard Paste Button with Shine Animation */
+.clipboard-paste-btn {
+    position: relative;
+    overflow: hidden;
+    background: #9C27B0 !important;
+    transition: all 0.3s ease;
+}
+
+.clipboard-paste-btn:hover {
+    background: #7B1FA2 !important;
+}
+
+.clipboard-paste-btn.shine {
+    animation: shine 2s ease-in-out infinite;
+    box-shadow: 0 0 15px rgba(156, 39, 176, 0.6);
+}
+
+@keyframes shine {
+    0% {
+        box-shadow: 0 0 10px rgba(156, 39, 176, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(156, 39, 176, 0.8), 0 0 35px rgba(156, 39, 176, 0.6);
+        transform: scale(1.02);
+    }
+    100% {
+        box-shadow: 0 0 10px rgba(156, 39, 176, 0.4);
+    }
+}
+
+.clipboard-paste-btn.shine::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    transform: rotate(45deg);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    50%, 100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}

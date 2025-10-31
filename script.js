@@ -238,6 +238,15 @@ document.addEventListener('DOMContentLoaded', function() {
             closeImportModal();
         }
     };
+
+    // Try to read clipboard on page load (one-time check)
+    tryReadClipboardOnLoad();
+
+    // Add keyboard shortcut listener for Cmd+V / Ctrl+V
+    document.addEventListener('keydown', handlePasteShortcut);
+
+    // Start monitoring only after first successful clipboard read
+    // This avoids repeated permission prompts
 });
 
 function addMakerOrder() {
@@ -1039,3 +1048,117 @@ function loadOrdersFromData(data) {
         alert('Error loading orders: ' + error.message);
     }
 }
+
+// Clipboard functionality
+async function tryReadClipboardOnLoad() {
+    try {
+        // Check if Clipboard API is available
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+            console.log('Clipboard API not available');
+            return;
+        }
+
+        // Try to read clipboard
+        const text = await navigator.clipboard.readText();
+
+        // If we successfully read clipboard, mark permission as granted
+        clipboardPermissionGranted = true;
+
+        if (text && text.trim()) {
+            // Try to parse as JSON
+            try {
+                const data = JSON.parse(text);
+                // Check if it looks like our order format
+                if (data.takerOrder && data.makerOrders) {
+                    // Cache the data so we don't need to read clipboard again on button click
+                    cachedClipboardData = data;
+
+                    // Show the button with shine animation to attract user attention
+                    const button = document.getElementById('clipboardPasteBtn');
+                    if (button) {
+                        button.style.display = 'inline-block';
+                        button.classList.add('shine');
+                    }
+                }
+            } catch (e) {
+                // Not valid JSON or not our format, ignore
+                console.log('Clipboard does not contain valid order JSON');
+            }
+        }
+    } catch (error) {
+        // Permission denied or other error - silently fail
+        console.log('Could not read clipboard:', error.message);
+        clipboardPermissionGranted = false;
+    }
+}
+
+async function pasteFromClipboard() {
+    try {
+        let data = null;
+
+        // If we have cached data from page load, use it to avoid second permission prompt
+        if (cachedClipboardData) {
+            data = cachedClipboardData;
+            cachedClipboardData = null; // Clear cache after use
+        } else {
+            // No cached data, need to read clipboard
+            if (!navigator.clipboard || !navigator.clipboard.readText) {
+                alert('Clipboard API is not supported in your browser. Please use the "Paste JSON" option in Import Orders instead.');
+                return;
+            }
+
+            // Read clipboard
+            const text = await navigator.clipboard.readText();
+
+            // Mark permission as granted after successful read
+            clipboardPermissionGranted = true;
+
+            if (!text || !text.trim()) {
+                alert('Clipboard is empty. Please copy some JSON data first.');
+                return;
+            }
+
+            // Try to parse
+            try {
+                data = JSON.parse(text);
+            } catch (error) {
+                alert('Clipboard does not contain valid JSON:\n\n' + error.message + '\n\nPlease copy valid order configuration JSON.');
+                return;
+            }
+        }
+
+        // Load the data
+        validateAndLoadOrders(data);
+
+        // Hide button and remove shine after successful import
+        const button = document.getElementById('clipboardPasteBtn');
+        if (button) {
+            button.classList.remove('shine');
+            button.style.display = 'none';
+        }
+    } catch (error) {
+        if (error.name === 'NotAllowedError') {
+            clipboardPermissionGranted = false;
+            alert('Clipboard access denied. Please grant clipboard permission or use the "Paste JSON" option in Import Orders.');
+        } else {
+            alert('Error reading clipboard: ' + error.message);
+        }
+    }
+}
+
+function handlePasteShortcut(event) {
+    // Check for Cmd+V (Mac) or Ctrl+V (Windows/Linux)
+    // Don't trigger if user is typing in an input field or textarea
+    const isInputField = event.target.tagName === 'INPUT' ||
+                        event.target.tagName === 'TEXTAREA' ||
+                        event.target.isContentEditable;
+
+    if ((event.metaKey || event.ctrlKey) && event.key === 'v' && !isInputField) {
+        event.preventDefault();
+        pasteFromClipboard();
+    }
+}
+
+// Clipboard permission tracking
+let clipboardPermissionGranted = false;
+let cachedClipboardData = null; // Cache clipboard data to avoid multiple reads
