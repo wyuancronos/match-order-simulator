@@ -870,8 +870,15 @@ function loadOrdersFromData(data) {
 
         // Load taker order
         const taker = data.takerOrder;
-        const takerSideToken = `${taker.side} ${taker.token}`;
-        
+
+        // Handle tokenId mapping: if tokenId exists, use it as YES token reference
+        let takerToken = taker.token;
+        if (taker.tokenId !== undefined && !taker.token) {
+            takerToken = 'YES';  // tokenId represents the YES token
+        }
+
+        const takerSideToken = `${taker.side} ${takerToken}`;
+
         document.getElementById('takerSideToken').value = takerSideToken;
         document.getElementById('takerMakerAmount').value = taker.makerAmount;
         document.getElementById('takerTakerAmount').value = taker.takerAmount;
@@ -885,8 +892,16 @@ function loadOrdersFromData(data) {
         data.makerOrders.forEach(maker => {
             addMakerOrder();
             const currentId = makerOrderCount;
-            const makerSideToken = `${maker.side} ${maker.token}`;
-            
+
+            // Handle tokenId mapping for maker orders
+            let makerToken = maker.token;
+            if (taker.tokenId !== undefined && maker.tokenId !== undefined && !maker.token) {
+                // If maker tokenId matches taker tokenId, it's YES, otherwise NO
+                makerToken = (maker.tokenId === taker.tokenId) ? 'YES' : 'NO';
+            }
+
+            const makerSideToken = `${maker.side} ${makerToken}`;
+
             document.getElementById(`makerSideToken-${currentId}`).value = makerSideToken;
             document.getElementById(`makerMakerAmount-${currentId}`).value = maker.makerAmount;
             document.getElementById(`makerTakerAmount-${currentId}`).value = maker.takerAmount;
